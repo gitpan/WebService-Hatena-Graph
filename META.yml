@@ -1,0 +1,13 @@
+abstract: A Perl interface to Hatena::Gpaph API
+author: Kentaro Kuribayashi <kentaro@cpan.org>
+build_requires: 
+  Test::More: 0
+distribution_type: module
+generated_by: Module::Install version 0.64
+license: MIT
+name: WebService-Hatena-Graph
+no_index: 
+  directory: 
+    - inc
+    - t
+version: 0.01
