@@ -1,6 +1,9 @@
 Revision history for Perl extension WebService::Hatena::Graph
 
-  0.02  Tue Oct 18 08:01:37 2006
+  0.03  Sat Oct 21 11:10:27 2006
+        - fix a typo on the name of Hatena::Graph
+
+  0.02  Wed Oct 18 08:01:37 2006
         - add a line to Makefile.PL to indicate pre-required module
 
   0.01  Tue Oct 17 23:09:11 2006

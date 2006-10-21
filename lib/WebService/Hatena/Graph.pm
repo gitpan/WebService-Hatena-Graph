@@ -5,7 +5,7 @@ use warnings;
 use Carp qw(croak);
 use LWP::UserAgent;
 
-our $VERSION = '0.02';
+our $VERSION = '0.03';
 
 sub new {
     my ($class, $username, $password) = @_;
@@ -36,11 +36,11 @@ __END__
 
 =head1 NAME
 
-WebService::Hatena::Graph - A Perl interface to Hatena::Gpaph API
+WebService::Hatena::Graph - A Perl interface to Hatena::Graph API
 
 =head1 VERSION
 
-This document describes WebService::Hatena::Graph version 0.02
+This document describes WebService::Hatena::Graph version 0.03
 
 =head1 SYNOPSIS
 

@@ -1,4 +1,4 @@
-abstract: A Perl interface to Hatena::Gpaph API
+abstract: A Perl interface to Hatena::Graph API
 author: Kentaro Kuribayashi <kentaro@cpan.org>
 build_requires: 
   Test::More: 0
@@ -12,4 +12,4 @@ no_index:
     - t
 requires: 
   LWP::Authen::Wsse: 0
-version: 0.02
+version: 0.03
