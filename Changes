@@ -1,10 +1,24 @@
 Revision history for Perl extension WebService::Hatena::Graph
 
-  0.03  Sat Oct 21 11:10:27 2006
-        - fix a typo on the name of Hatena::Graph
+[Changes for 0.04  2006-10-27]
 
-  0.02  Wed Oct 18 08:01:37 2006
-        - add a line to Makefile.PL to indicate pre-required module
+* IMPORTANT CHANGE: new() and post() methods now expect the arguments　
+  to be passed in as a hash. For more, see the documentation.
+* post() now returns HTTP::Response object if request is success.
+* The date param in post() is now optional with the API's update. You
+  can omit to pass it explicitly. In that case, Hatena::Graph will
+  regard as if you pass the date on the day.
+* Added t/01_exception.t
+* Added t/02_post.t
 
-  0.01  Tue Oct 17 23:09:11 2006
-        - original version
+[Changes for 0.03  2006-10-21]
+
+* Fixed a typo on the name of Hatena::Graph.
+
+[Changes for 0.02 - 2006-10-18]
+
+* Added a line to Makefile.PL to indicate pre-required module.
+
+[Changes for 0.01 - 2006-10-17]
+
+* original version.

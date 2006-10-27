@@ -5,29 +5,32 @@ use warnings;
 use Carp qw(croak);
 use LWP::UserAgent;
 
-our $VERSION = '0.03';
+our $VERSION = '0.04';
 
 sub new {
-    my ($class, $username, $password) = @_;
+    my ($class, %args) = @_;
     croak ('Both username and password are required')
-        unless (defined $username && defined $password);
+        unless (defined $args{username} && defined $args{password});
 
     my $ua = LWP::UserAgent->new(agent => __PACKAGE__."/$VERSION");
-       $ua->credentials('graph.hatena.ne.jp:80', '', $username, $password);
+       $ua->credentials('graph.hatena.ne.jp:80', '', @args{qw(username password)});
 
     return bless { ua => $ua }, $class;
 }
 
 sub post {
-    my ($self, $graphname, $date, $value) = @_;
+    my ($self, %args) = @_;
+    croak ('Both graphname and value are required')
+        unless (defined $args{graphname} && defined $args{value});
+
     my $response = $self->{ua}->post('http://graph.hatena.ne.jp/api/post', {
-            graphname => $graphname,
-            date      => $date,
-            value     => $value,
+        map { $_ => $args{$_} } qw(graphname date value)
     });
 
     croak (sprintf "%d: %s", $response->code, $response->message)
         if $response->code != 201;
+
+    return $response;
 }
 
 1;
@@ -40,14 +43,22 @@ WebService::Hatena::Graph - A Perl interface to Hatena::Graph API
 
 =head1 VERSION
 
-This document describes WebService::Hatena::Graph version 0.03
+This document describes WebService::Hatena::Graph version 0.04
 
 =head1 SYNOPSIS
 
   use WebService::Hatena::Graph;
 
-  my $graph = WebService::Hatena::Graph->new($username, $password);
-     $graph->post($graphname, $date, $value);
+  my $graph = WebService::Hatena::Graph->new(
+         username => $username,
+         password => $password,
+     );
+
+     $graph->post(
+         graphname => $graphname,
+         date      => $date,      # optional
+         value     => $value,
+     );
 
 =head1 DESCRIPTION
 
@@ -57,25 +68,36 @@ graphically.
 
 =head1 METHODS
 
-=head2 new ( I<$username>, I<$password> )
+=head2 new ( I<%args> )
 
 =over 4
 
-  my $graph = WebService::Hatena::Graph->new($username, $password);
+  my $graph = WebService::Hatena::Graph->new(
+      username => $username,
+      password => $password,
+  );
 
-Creates and returns a new WebService::Hatena::Graph object.
+Creates and returns a new WebService::Hatena::Graph object. Both
+username and password are required.
 
 =back
 
-=head2 post ( I<$graphname>, I<$date>, I<$value>  )
+=head2 post ( I<%args>  )
 
 =over 4
 
-  $graph->post($graphname, $date, $value);
+  $graph->post(
+      graphname => $graphname,
+      date      => $date,      # optional
+      value     => $value,
+  );
 
-Posts a new I<$value> for I<$date> to the graph represented by
-I<$graphname>. Unless the response code is 201, this method will croak
-immediately.
+Posts a new I<$value> on I<$date> to the graph indicated by
+I<$graphname>. Unless the required parameters are not passed in or the
+response code is 201, this method will croak immediately.
+
+You can omit to pass the date explicitly. In that case, Hatena::Graph
+will regard as if you pass the date on the day.
 
 I<$date> can take any form described below:
 
