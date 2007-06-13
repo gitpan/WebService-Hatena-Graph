@@ -3,14 +3,17 @@ package WebService::Hatena::Graph;
 use strict;
 use warnings;
 use Carp qw(croak);
+
+use URI;
+use JSON::Any;
 use LWP::UserAgent;
 
-our $VERSION = '0.04';
+our $VERSION = '0.05';
 
 sub new {
     my ($class, %args) = @_;
-    croak ('Both username and password are required')
-        unless (defined $args{username} && defined $args{password});
+    croak ('Both username and password are required.')
+        if (!defined $args{username} || !defined $args{password});
 
     my $ua = LWP::UserAgent->new(agent => __PACKAGE__."/$VERSION");
        $ua->credentials('graph.hatena.ne.jp:80', '', @args{qw(username password)});
@@ -18,19 +21,82 @@ sub new {
     return bless { ua => $ua }, $class;
 }
 
+sub ua { shift->{ua} }
+
+
+# This method remains only for backward compatibility (less or equal
+# version 0.04). Use post_data() method instead.
 sub post {
     my ($self, %args) = @_;
-    croak ('Both graphname and value are required')
-        unless (defined $args{graphname} && defined $args{value});
+    return $self->post_data(%args);
+}
 
-    my $response = $self->{ua}->post('http://graph.hatena.ne.jp/api/post', {
-        map { $_ => $args{$_} } qw(graphname date value)
-    });
+sub post_data {
+    my ($self, %args) = @_;
 
-    croak (sprintf "%d: %s", $response->code, $response->message)
-        if $response->code != 201;
+    croak ('Graphname parameter must be passed in.')
+        if !defined $args{graphname};
 
-    return $response;
+    my $res = $self->_post('http://graph.hatena.ne.jp/api/data', %args);
+
+    croak (sprintf "%d: %s", $res->code, $res->message)
+        if $res->code != 201;
+
+    return 1;
+}
+
+sub get_data {
+    my ($self, %args) = @_;
+
+    croak ('Graphname parameter must be passed in.')
+        if !defined $args{graphname};
+
+    my $res = $self->_get('http://graph.hatena.ne.jp/api/data', (%args, type => 'json'));
+
+    croak (sprintf "%d: %s", $res->code, $res->message)
+        if $res->code != 200;
+
+    return JSON::Any->jsonToObj($res->content);
+}
+
+sub post_config {
+    my ($self, %args) = @_;
+
+    croak ('Graphname parameter must be passed in.')
+        if !defined $args{graphname};
+
+    my $res = $self->_post('http://graph.hatena.ne.jp/api/config', %args);
+
+    croak (sprintf "%d: %s", $res->code, $res->message)
+        if $res->code != 201;
+
+    return 1;
+}
+
+sub get_config {
+    my ($self, %args) = @_;
+
+    croak ('Graphname parameter must be passed in.')
+        if !defined $args{graphname};
+
+    my $res = $self->_get('http://graph.hatena.ne.jp/api/config', (%args, type => 'json'));
+
+    croak (sprintf "%d: %s", $res->code, $res->message)
+        if $res->code != 200;
+
+    return JSON::Any->jsonToObj($res->content);
+}
+
+sub _get {
+    my ($self, $url, %params) = @_;
+    my $uri = URI->new($url);
+    $uri->query_form(%params);
+    return $self->ua->get($uri);
+}
+
+sub _post {
+    my ($self, $url, %params) = @_;
+    return $self->ua->post($url, \%params);
 }
 
 1;
@@ -41,30 +107,56 @@ __END__
 
 WebService::Hatena::Graph - A Perl interface to Hatena::Graph API
 
-=head1 VERSION
-
-This document describes WebService::Hatena::Graph version 0.04
-
 =head1 SYNOPSIS
 
   use WebService::Hatena::Graph;
 
   my $graph = WebService::Hatena::Graph->new(
-         username => $username,
-         password => $password,
-     );
+      username => $username,
+      password => $password,
+  );
 
-     $graph->post(
-         graphname => $graphname,
-         date      => $date,      # optional
-         value     => $value,
-     );
+  # set data to the specified graph
+  $graph->post_data(
+      graphname => $graphname,
+      date      => $date,
+      value     => $value,
+  );
+
+  # retrieve graph data
+  $graph->get_data(
+      graphname => $graphname,
+      username  => $username,
+  );
+
+  # set config
+  $graph->post_data(
+      graphname      => $graphname,
+      graphcolor     => $graphcolor,
+      graphtype      => $graphtype,
+      status         => $status,
+      allowuser      => $allowuser,
+      allowgrouplist => $allowgrouplist,
+      stack          => $stack,
+      reverse        => $reverse,
+      formula        => $formula,
+      maxy           => $maxy,
+      miny           => $miny,
+      showdata       => $showdata,
+      nolabel        => $nolabel,
+      userline       => $userline,
+      userlinecolor  => $userlinecolor,
+      comment        => $comment,
+  );
+
+  # retrieve config
+  $graph->get_config( graphname => $graphname );
 
 =head1 DESCRIPTION
 
-WebService::Hatena::Graph allows you to post some values resulting
-from your daily activities easily to Hatena::Graph to record them
-graphically.
+Hatena::Graph is a website which allows users to manage and share
+daily activities with graphic representaion. WebService::Hatena::Graph
+provides an easy way to communicate with it using its API.
 
 =head1 METHODS
 
@@ -77,47 +169,109 @@ graphically.
       password => $password,
   );
 
-Creates and returns a new WebService::Hatena::Graph object. Both
-username and password are required.
+This method creates and returns a new WebService::Hatena::Graph
+object.
+
+Both username and password are required. If not passed in, it will
+croak immediately.
 
 =back
 
-=head2 post ( I<%args>  )
+=head2 post_data ( I<%args> )
 
 =over 4
 
-  $graph->post(
+  $graph->post_data(
       graphname => $graphname,
-      date      => $date,      # optional
+      date      => $date,
       value     => $value,
   );
 
-Posts a new I<$value> on I<$date> to the graph indicated by
-I<$graphname>. Unless the required parameters are not passed in or the
-response code is 201, this method will croak immediately.
+This method sets I<$value> on I<$date> to the graph specified by
+I<$graphname> parameter.
 
-You can omit to pass the date explicitly. In that case, Hatena::Graph
-will regard as if you pass the date on the day.
+B<NOTE>: If the I<graphname> parameter isn't passed in or the request
+ends in failure for some reason, this method will croak
+immediately. Additionally, you might want to consult the official
+documentation of Hatena::Graph API to know more about how you can pass
+the parameters in.
 
-I<$date> can take any form described below:
+This note is applicable to also all the methods described below except
+ua() method.
 
 =back
 
+=head2 post ( I<%args> )
+
 =over 4
 
-=item * 2006-10-13, 06-10-13, 10-13
+This method is an alias of post_data() method described above, but
+it's already obsolete and remains only for backward compatibility
+(less or eaqual version 0.04). Use post_data() instead.
 
-Date values separated with dashes.
+=back
 
-=item * 2006/10/13, 06/10/13, 10/13
+=head2 get_data ( I<%args> )
 
-Date values separated with slashes.
+=over 4
 
-=item * 20061013, 061013
+  $graph->get_data(
+      graphname => $graphname,
+      username  => $username,
+  );
 
-Date values unseparated.
+This method retrieves data of the graph specified by I<$graphname>.
 
-For more details, consult the help documentation of Hatena::Graph.
+=back
+
+=head2 post_config ( I<%args> )
+
+=over 4
+
+  $graph->post_data(
+      graphname      => $graphname,
+      graphcolor     => $graphcolor,
+      graphtype      => $graphtype,
+      status         => $status,
+      allowuser      => $allowuser,
+      allowgrouplist => $allowgrouplist,
+      stack          => $stack,
+      reverse        => $reverse,
+      formula        => $formula,
+      maxy           => $maxy,
+      miny           => $miny,
+      showdata       => $showdata,
+      nolabel        => $nolabel,
+      userline       => $userline,
+      userlinecolor  => $userlinecolor,
+      comment        => $comment,
+  );
+
+This method sets or updates the configuraions of the graph specified
+by I<$graphname>.
+
+=back
+
+=head2 get_config ( I<%args> )
+
+=over 4
+
+  $graph->get_config( graphname => $graphname );
+
+This method retrieves the configuraions from the graph specified by
+I<$graphname>.
+
+=back
+
+=head2 ua ()
+
+=over 4
+
+  $graph->ua->timeout(10);
+
+This method returns LWP::UserAgent object internally used in the
+WebService::Hatena::Graph object. You can set some other options which
+are specific to LWP::UserAgent via this method.
 
 =back
 
@@ -131,7 +285,7 @@ L<http://graph.hatena.ne.jp/>
 
 =item * Hatena::Graph API documentation
 
-L<http://d.hatena.ne.jp/keyword/%a4%cf%a4%c6%a4%ca%a5%b0%a5%e9%a5%d5%bf%f4%c3%cd%c5%d0%cf%bfAPI>
+L<http://d.hatena.ne.jp/keyword/%a4%cf%a4%c6%a4%ca%a5%b0%a5%e9%a5%d5api>
 
 =back
 
@@ -141,15 +295,15 @@ Kentaro Kuribayashi E<lt>kentaro@cpan.orgE<gt>
 
 =head1 COPYRIGHT AND LICENSE (The MIT License)
 
-Copyright (c) 2006, Kentaro Kuribayashi E<lt>kentaro@cpan.orgE<gt>
+Copyright (c) 2006 - 2007, Kentaro Kuribayashi E<lt>kentaro@cpan.orgE<gt>
 
-Permission is hereby granted, free of charge, to any person
-obtaining a copy of this software and associated documentation files
-(the "Software"), to deal in the Software without restriction,
-including without limitation the rights to use, copy, modify, merge,
-publish, distribute, sublicense, and/or sell copies of the Software,
-and to permit persons to whom the Software is furnished to do so,
-subject to the following conditions:
+Permission is hereby granted, free of charge, to any person obtaining
+a copy of this software and associated documentation files (the
+"Software"), to deal in the Software without restriction, including
+without limitation the rights to use, copy, modify, merge, publish,
+distribute, sublicense, and/or sell copies of the Software, and to
+permit persons to whom the Software is furnished to do so, subject to
+the following conditions:
 
 The above copyright notice and this permission notice shall be
 included in all copies or substantial portions of the Software.
