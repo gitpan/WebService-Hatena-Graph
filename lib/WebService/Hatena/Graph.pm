@@ -8,7 +8,7 @@ use URI;
 use JSON::Any;
 use LWP::UserAgent;
 
-our $VERSION = '0.05';
+our $VERSION = '0.06';
 
 sub new {
     my ($class, %args) = @_;
@@ -124,9 +124,9 @@ WebService::Hatena::Graph - A Perl interface to Hatena::Graph API
   );
 
   # retrieve graph data
-  $graph->get_data(
-      graphname => $graphname,
-      username  => $username,
+  my $graph_data = $graph->get_data(
+      graphname  => $graphname,
+      username   => $username,
   );
 
   # set config
@@ -150,7 +150,7 @@ WebService::Hatena::Graph - A Perl interface to Hatena::Graph API
   );
 
   # retrieve config
-  $graph->get_config( graphname => $graphname );
+  my $graph_config = $graph->get_config( graphname => $graphname );
 
 =head1 DESCRIPTION
 
@@ -215,12 +215,13 @@ it's already obsolete and remains only for backward compatibility
 
 =over 4
 
-  $graph->get_data(
-      graphname => $graphname,
-      username  => $username,
+  my $graph_data = $graph->get_data(
+      graphname  => $graphname,
+      username   => $username,
   );
 
-This method retrieves data of the graph specified by I<$graphname>.
+This method retrieves the data of the graph specified by I<$graphname>
+and returns a hashref to them.
 
 =back
 
@@ -256,10 +257,10 @@ by I<$graphname>.
 
 =over 4
 
-  $graph->get_config( graphname => $graphname );
+  my $graph_config = $graph->get_config( graphname => $graphname );
 
 This method retrieves the configuraions from the graph specified by
-I<$graphname>.
+I<$graphname> and returns a hashref to them.
 
 =back
 

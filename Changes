@@ -1,5 +1,10 @@
 Revision history for Perl extension WebService::Hatena::Graph
 
+[Changes for 0.06  2007-6-13]
+
+* Improved the POD: Added explanation of return values which get_*
+  method returns
+
 [Changes for 0.05  2007-6-13]
 
 * Added post_data(), get_data(), post_config(), get_config(), and ua()
