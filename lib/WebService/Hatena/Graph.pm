@@ -8,7 +8,7 @@ use URI;
 use JSON::Any;
 use LWP::UserAgent;
 
-our $VERSION = '0.06';
+our $VERSION = '0.07';
 
 sub new {
     my ($class, %args) = @_;
@@ -130,7 +130,7 @@ WebService::Hatena::Graph - A Perl interface to Hatena::Graph API
   );
 
   # set config
-  $graph->post_data(
+  $graph->post_config(
       graphname      => $graphname,
       graphcolor     => $graphcolor,
       graphtype      => $graphtype,
@@ -229,7 +229,7 @@ and returns a hashref to them.
 
 =over 4
 
-  $graph->post_data(
+  $graph->post_config(
       graphname      => $graphname,
       graphcolor     => $graphcolor,
       graphtype      => $graphtype,
