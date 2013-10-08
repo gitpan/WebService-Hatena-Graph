@@ -1,5 +1,9 @@
 Revision history for Perl extension WebService::Hatena::Graph
 
+[Changes for 0.08  2013-10-8]
+
+* Added OAuth API support (thanks to id:wakabatan)
+
 [Changes for 0.07  2007-7-13]
 
 * Fixed some errors in the POD.
